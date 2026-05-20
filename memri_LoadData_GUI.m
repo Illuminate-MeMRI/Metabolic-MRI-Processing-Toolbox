@@ -281,7 +281,8 @@ try
 
 catch err
     obj.Parent.Name = tmp; drawnow;
-    fprintf('Loading data failed, panic.\n')    
+    fprintf('Loading data failed. Report error message below.\n');
+    throw(err);
 end
 
 
@@ -450,14 +451,23 @@ pos(3) = pos(3) + round(txt_pos_corr(1)).*drdc(1);
 texts.vendor.Position = pos;
 
 
-% // --- Add a line.
-% texts.line = uicontrol(obj, 'Style', 'text', ...
-%     'String', '',  'Units', 'normalized',...
-%     'BackgroundColor',clr.bg, 'ForegroundColor', clr.txt,...
-%     'Fontsize', font.sz, 'FontWeight','normal');
-% pos_txt = pos; pos_txt(2) = pos_txt(2) - 0.05;
-% texts.line.Position = pos_txt;
+% // --- Add tickbox-objects
 
+% TICKBOX: automatic processing - Script
+ticks.autoscript = uicontrol(obj, 'Style','checkbox',...
+    'String', 'Process via script',  'Units', 'normalized',...
+    'BackgroundColor',clr.bg, 'ForegroundColor', clr.txt,...
+    'Fontsize', font.sz, 'FontWeight','bold'); 
+ticks.autoscript.Position = [window.grid{3,2} window.grid_sz];
+ticks.autoscript.Callback = @GUI_ticks_autoprocessing;
+
+% TICKBOX: automatic processing - GUI
+ticks.autogui = uicontrol(obj, 'Style','checkbox',...
+    'String', 'Process via GUI',  'Units', 'normalized',...
+    'BackgroundColor',clr.bg, 'ForegroundColor', clr.txt,...
+    'Fontsize', font.sz, 'FontWeight','bold'); 
+ticks.autogui.Position = [window.grid{4,2} window.grid_sz];
+ticks.autogui.Callback = @GUI_ticks_autoprocessing;
 
 % // --- Selected files display
 % Creates elementgroup: edit, edit, button popup related to filepath,
@@ -547,7 +557,7 @@ obj.SizeChangedFcn = @GUI_window_resized;
 
 % Store GUI elements and settings
 gui = guidata(obj); gui.obj = obj;  
-gui.buttons = buttons; gui.texts = texts; 
+gui.buttons = buttons; gui.texts = texts; gui.ticks = ticks;
 gui.popups = popups; gui.font = font; gui.edits = edits; 
 gui.window = window; gui.clr = clr;
 
@@ -566,6 +576,7 @@ GUI_image_illuminate(obj);
 
 
 end
+
 
 function GUI_window_resized(obj, ~)
 % Initiates during screensize changes, allowing updates of certain GUI
@@ -607,6 +618,25 @@ end
 
 function GUI_close(~, ~)
 closereq;
+end
+
+function GUI_ticks_autoprocessing(obj, evt)
+% Ensures only one of the tickboxes can be active - process via GUI or via
+% script.
+
+gui = guidata(obj);
+
+% Source tickbox
+src = 'gui'; if contains(evt.Source.String, 'script'), src = 'script'; end
+
+% Disable the other ticbox if enabled.
+switch src
+    case 'gui'
+        if gui.ticks.autoscript.Value, gui.ticks.autoscript.Value = 0; end        
+    case 'script'
+        if gui.ticks.autogui.Value, gui.ticks.autogui.Value = 0; end
+end
+
 end
 
 function GUI_image_illuminate(obj)
@@ -674,5 +704,5 @@ function GUI_open_illuminate(~, ~)
 end
 
 function GUI_open_github(~, ~)
-    web('https://github.com/Illuminate-MeMRI/Metabolic-MRI-Toolbox');
+    web('https://github.com/Illuminate-MeMRI/Metabolic-MRI-Processing-Toolbox');
 end
