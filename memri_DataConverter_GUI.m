@@ -280,11 +280,18 @@ try
     gui.texts.vendor.ForegroundColor = [15, 180, 6]./255; drawnow;
 
 catch err
+    % Handle errors in loading data - write file-strings and error-log to
+    % file.
     obj.Parent.Name = tmp; drawnow;
-    fprintf('Loading data failed. Report error message below.\n');
+    fprintf('Loading data failed. Report error -message and -file.\n');
+    str = string(datetime('now', 'Format','yyMMddHHmmss'));
+    save(['error_log' str '.mat'], 'err', 'files');
     throw(err);
 end
 
+
+% Automatic processing
+memri_launch_autoprocessing(obj);
 
 
 end
@@ -338,6 +345,19 @@ series_full_in_content_index(ind2delete_in_full_in_content_index) = [];
 
 % Remove series, except for one file per series.
 cont(series_full_in_content_index) = [];
+
+end
+
+function memri_launch_autoprocessing(obj)
+% Launch automated processing - either by script or GUI - if enabled by
+% user in the MRS data converter.
+gui = guidata(obj);
+
+if gui.ticks.autogui.Value
+    fprintf('Automatic processing by GUI is not fully implented yet.\n')
+elseif gui.ticks.autoscript.Value
+    fprintf('Automatic processing by script is not fully implented yet.\n')
+end
 
 end
 
