@@ -3,24 +3,25 @@ function inp_struct = memri_log(inp_struct, varargin)
 %
 % Writes log-data to file. Input structure requires field "filepath" and 
 % will return the same struct with an (updated) log-field plus an instance
-% number field. The latter is used to track the log-file by log filename:
-%   log-file = filepath + instance# .log
+% number field. The latter is used to track the log-file by filename:
+% i.e. log-file location = filepath + instance# .log
 %
 % The returned structure can be used to keep logging to the same log-file.
 %
 % NB. Date and time are appended to the start of each log-line.
 %
 % input
-%   fpout:      - Struct with field(s) .filepath and optionally
+%   inp_struct: - Struct with field(s) .filepath and optionally
 %                 .log field and an instance-field. If filepath is absent
 %                 the log-file is saved as instance.log in the current
-%                 MATLAB working directory,
-%               - filepath for log-file. The instance number will be
+%                 MATLAB working directory.
+%
+%   varargin:   - filepath for log-file. The instance number will be
 %                 ignored and only a cell-list with log-data is returned.
 %
-%   varargin:   log-data input as string or integers. Data will be 
-%               converted to string and every variable input argument will 
-%               be treated as a single line. 
+%               - log-data input as string or integers. Data will be 
+%                 converted to string and every variable input argument will 
+%                 be treated as a single line. 
 %
 % Example: 
 % memri = memri_log(memri, 'WSVD applied. Noise-mask:', size(data,1)/6);

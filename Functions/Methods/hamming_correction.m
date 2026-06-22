@@ -1,4 +1,4 @@
-function [data, win_acq, win_hamming, corr_mask] = memri_hamming_correction(data, ind_spat, ind_aver)
+function [data, win_acq, win_hamming, corr_mask] = hamming_correction(data, ind_spat, ind_aver)
 % Return data corrected for the imperfect hamming window acquisition
 % pattern of the finite mrs volume.
 % 

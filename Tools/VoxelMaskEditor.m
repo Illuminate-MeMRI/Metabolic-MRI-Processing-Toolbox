@@ -29,8 +29,8 @@ end
 
 if ~isfield(plot_par, 'colors')
     plot_par.colors.main         = [0.1 0.1 0.1];
-    plot_par.colors.text_title   = [0.502 0.502 0.502];
-    plot_par.colors.hilight1     = [0.95 0 0];
+    plot_par.colors.text_title   = [0.25 0.25 0.25];
+    plot_par.colors.hilight1     = [1 1 0];
 end
 
 % --- % Create Figure for plotting 2D
@@ -238,7 +238,7 @@ tgui = guidata(fh);
 % Plot data for each tab: voxel grid and more plot settings.
 plot_par = tgui.plot_par;
 
-plot_par.alpha = 0.35; 
+plot_par.alpha = 0.65; 
 
 % Storage for each axis.
 ax = cell(1,plot_par.tabs_total);

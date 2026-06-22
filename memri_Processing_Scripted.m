@@ -79,21 +79,10 @@ memri.nfo.domain = 0; if sum(isnan(ind_spat)) == 3, memri.nfo.domain = 1; end
 % // --- Initiate LOG
 memri = memri_log(memri, memri.filepath);
 
+
 % // --- Apodization weighted acquisition correction
 if doHammingCorrection
-
-  % Required input
-  ind_spat = findLabels(memri.labels, {'kx', 'ky', 'kz'});
-  ind_aver = findLabels(memri.labels, {'aver'});
-
-  if sum(isnan(ind_spat)) ~= 3 && ~isnan(ind_aver)
-      % Apply hamming correction
-      [memri.data, win_ham, win_acq] = ...
-          memri_hamming_correction(memri.data, ind_spat, ind_aver);
-    
-       % Write to log
-       memri = memri_log(memri, 'memri_script: Corrected for the hamming acquisition window.');
-  end
+    memri.data = memri_hamming_correction(memri.data, ind_spat, ind_aver);    
 end
 
 
