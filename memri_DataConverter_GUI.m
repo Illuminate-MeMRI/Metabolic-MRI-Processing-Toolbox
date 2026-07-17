@@ -5,19 +5,6 @@
 % Q. van Houtum, v02.2025. 
 % Contact: quincy.houtum@uk-essen.de / quincyvanhoutum@gmail.com
 
-clc;clear;
-
-% Add Toolbox to current-path Matlab
-fcall = dbstack('-completenames'); [fp,fn,ext] = fileparts(fcall.file);
-toolbox_directories = dir_withsub(fp);
-sdf = {toolbox_directories(:).folder};
-sdn = {toolbox_directories(:).name};
-toolbox_directories = ...
-    cellfun(@(x,y) cat(2,x,'\',y), sdf, sdn,'UniformOutput',false);
-if ~isempty(toolbox_directories)
-    addpath(toolbox_directories{:}); savepath;
-end
-
 % Initiate the GUI
 [memri, gui] = GUI_initiate();
 
@@ -284,8 +271,8 @@ catch err
     % file.
     obj.Parent.Name = tmp; drawnow;
     fprintf('Loading data failed. Report error -message and -file.\n');
-    str = string(datetime('now', 'Format','yyMMddHHmmss'));
-    save(['error_log' str '.mat'], 'err', 'files');
+    str = char(string(datetime('now', 'Format','yyMMddHHmmss')));
+    save(['error_log_' str '.mat'], 'err', 'files');
     throw(err);
 end
 

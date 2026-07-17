@@ -1,14 +1,14 @@
-function data = memri_fft_spatial(data, dim)
+function memri = memri_fft_spatial(memri)
 % Return the inverse FFT of a complex multidimensional volume over the 
-% spatial indexes in "dim". 
+% spatial indexes in "dim". Expects data in memri.data and requires
+% memri.labels to find the correct spatial indexes querying kx, ky and kz.
 %
 % Input
-%   data:   complex multidimensional array with spatial dimension at  
-%           indexes described in dim. 
-%   dim:    list of spatial dimension indexes in data.
+%   memri:          struct with fields data and labels. The labels describe
+%                   the dimensions in data.
 %
 % Output
-%   data:   inverse fourier transform of the input array data
+%   memri.data:     inverse fourier transform of the data in memri.data
 %
 % Method
 %   First inverse fftshift each spatial dimension before inverse FFT, 
@@ -21,12 +21,12 @@ function data = memri_fft_spatial(data, dim)
 % Quincy van Houtum, v2025.12
 % Contact: quincyvanhoutum@gmail.com 
 
+% Required input
+spat_ind = findLabels(memri.labels, {'kx', 'ky', 'kz'});
 
-% Shift zero-freq to center
-for kk = 1:numel(dim), data = ifftshift(data, dim(kk)); end
+% Spatial forward fourier transform
+memri.data = fft_spatial(memri.data, spat_ind);
+memri.nfo.domain = 1; % Time domain
 
-% Fourier Transform
-for kk = 1:size(dim,2), data = ifft(data,[], dim(kk)); end
-
-% Shift back
-for kk = 1:numel(dim), data = fftshift(data, dim(kk)); end
+% LOG
+memri = memri_log(memri, 'memri_fft_spatial: Applied FFT to k-space data.');

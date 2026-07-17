@@ -30,10 +30,11 @@ if isfield(nfo, 'SpectralBW_Hz')
     mrs_nfo.bandwidth = nfo.SpectralBW_Hz;
 end
 
-% Echotime
+% Echotime & TR
 if isfield(nfo,  'Act_TR_TE_ms')
     TRTE = strsplit(nfo.Act_TR_TE_ms,' / ');
-    mrs_nfo.TE = str2double(TRTE{2});
+    mrs_nfo.TR = str2double(TRTE{1}) .* 1e-3;
+    mrs_nfo.TE = str2double(TRTE{2}) .* 1e-3;
 end
 
 % FOV: RL AP FH

@@ -1,7 +1,8 @@
 function nfo = twix_parseNFO(twix_hdr)
 % Extract all required NFO from the twix-header for different Siemens
 % platform versions: nucleus, dwelltime, fieldstrength, frequency, OS
-% factor, dimensions, FOV, 
+% factor, dimensions, and FOV. The resolution is calculated from
+% matrix-size i.e. dimensions and FOV.
 %
 % Uses getFieldValues.m, findFieldnames.m
 
@@ -12,24 +13,28 @@ vals = getFieldValues(twix_hdr, 'nucleus');
 nfo.nucleus = getCommonValue(vals, 0);
 
 % Fieldstrength
-nfo.tesla = NaN;
+nfo.fieldstrength = NaN;
 stroi = {'fieldstrength', 'flNominalB0'};
 for kk = 1:numel(stroi)
     vals = getFieldValues(twix_hdr, stroi{kk}); 
-    nfo.tesla = getCommonValue(vals);
-    if ~isnan(nfo.tesla), break; end
+    nfo.fieldstrength = getCommonValue(vals);
+    if ~isnan(nfo.fieldstrength), break; end
 end
 
 % Dwelltime & Bandwidth
 vals = getFieldValues(twix_hdr, 'dwelltime'); 
 dt = getCommonValue(vals) * 1e-9;
 % Add additional parameters using found parameters (bw before dwelltime)
-if ~isempty(dt), nfo.bw = 1./dt; end
+if ~isempty(dt), nfo.bandwidth = 1./dt; end
 nfo.dwelltime = dt;
 
 % Echo-time
 vals = getFieldValues(twix_hdr, 'TE',0);
-nfo.TE = getCommonValue(vals) .* 10^-6; % In Seconds.
+nfo.TE = getCommonValue(vals) .* 1e-6; % In Seconds.
+
+% Repetition-time
+vals = getFieldValues(twix_hdr, 'TR',0);
+nfo.TE = getCommonValue(vals) .* 1e-6; % In Seconds.
 
 % FOV - Readout
 [vals, foi] = getFieldValues(twix_hdr, 'ReadoutFOV'); 
@@ -76,7 +81,7 @@ end
 
 % Transmit Frequency
 vals = getFieldValues(twix_hdr, 'frequency'); 
-nfo.trans = getCommonValue(vals);
+nfo.transmit_frequency = getCommonValue(vals);
 
 % Oversample Factors
 nfo.OS = NaN;
@@ -100,7 +105,7 @@ end
 
 % --- Spatial parameters --- %
 
-% Matrix resolutions
+% Matrix sizes
 stroi = {'ReadResolution', 'MatrixSizeRead', 'Read'};
 for kk = 1:numel(stroi)
     vals = getFieldValues(twix_hdr, stroi{kk}, 0); 
@@ -115,7 +120,7 @@ for kk = 1:numel(stroi)
     if ~isnan(nfo.dim(2)), break; end
 end
 
-% Dimensions: [AP LR FH]
+% Dimensions: [read x phase x slice]
 stroi = {'SliceResolution', 'MatrixSizeSlice', 'Slice'};
 stroi_exact = [1 0 0];
 for kk = 1:numel(stroi)
@@ -124,6 +129,10 @@ for kk = 1:numel(stroi)
     if ~isnan(nfo.dim(3)), break; end
 end
 
+% Resolution (mm) using matrix size and fov
+if isfield(nfo, 'fov') && isfield(nfo, 'dim')
+    nfo.res = nfo.fov./nfo.dim;
+end
 
 end % End of main function
 

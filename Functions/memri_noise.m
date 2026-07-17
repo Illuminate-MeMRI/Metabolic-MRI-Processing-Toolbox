@@ -30,12 +30,24 @@ if nargin > 1
     for vi = 1:2:numel(varargin), opts.(varargin{vi}) = varargin{vi+1}; end
 end
 
+% Analyse masksize: an integer, default from function or all.
+% (see memri_noise_fromData)
+if ischar(opts.masksize)
+    if strcmp(opts.masksize, 'default') % Default i.e 25% of sample size.
+        opts.masksize = nan;
+    elseif ~strcmp(opts.masksize, 'all') % Not all thus integer
+        opts.masksize = str2double(opts.masksize);    
+    end
+end
+% TBD: add the masksize to the vector used for generating noise cov data.
+% See bottom of script. Mask-size is here first used to get noise if no
+% noise data is present !!!!!
 
 % // --- Calculate noise from data if noise-data is absent
 if ~isfield(memri,'noise')  
-    opts.masksize = NaN; % Use default noise-mask (25%)
     memri = memri_noise_fromData(memri, opts.masksize); 
-    memri_log(memri, 'memri_noise: Extracted noise-vectors from the main MRS data.');
+    memri_log(memri,...
+        'memri_noise: Extracted noise-vectors from the main MRS data.');
 end
 
 
@@ -47,7 +59,7 @@ if opts.noiseDomain ~= 0 && isfield(memri.noise, 'domain')
         ind_spat(isnan(ind_spat)) = [];
         memri.noise.data = memri_fft_spatial(memri.noise.data, ind_spat);
         memri.noise.domain = 1;
-        memri = memri_log(memri, ...
+        memri = memri_log(memri,...
             'memri_noise: Applied spatial FFT to noise-data to time-domain.');
     end
     % time 2 freq
@@ -99,15 +111,17 @@ if doVol % Volume
     end
     memri.noise.cov = cellfun(@cov, noise,'UniformOutput',0);
     
-    % Remove all co-variances, keep variances: assum all coil channels are
+    % Remove all co-variances, keep variances: assume all coil channels are
     % independent.
     if opts.independent
         memri.noise.cov = cellfun(@(x) diag(diag(x)), memri.noise.cov, ...
             'UniformOutput',0);    
     end
-    memri = memri_log(memri, 'memri_noise: Calculated a separate noise-cov matrix for each voxel.');
+    memri = memri_log(memri, ...
+    'memri_noise: Calculated a separate noise-cov matrix for each voxel.');
 else % FID
     memri.noise.cov = cov(noise);
     if opts.independent, memri.noise.cov = diag(diag(memri.noise.cov)); end
-    memri = memri_log(memri, 'memri_noise: Calculated a single noise-cov.');
+    memri = memri_log(memri, ...
+        'memri_noise: Calculated a single noise-cov.');
 end

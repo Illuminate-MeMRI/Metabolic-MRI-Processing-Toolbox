@@ -18,8 +18,6 @@ function memri = memri_roemer(memri, varargin)
 % (Optional)
 %   noisecov      use the noise-covariance matrix (1, default) or the 
 %                 identity-matrix (0). Example: ...,'noisecov', 1);
-%
-%
 % 
 % Output
 %   memri         updated memri-struct compatible with memri-ptb. 

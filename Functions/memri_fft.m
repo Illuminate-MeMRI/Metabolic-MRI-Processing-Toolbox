@@ -1,10 +1,10 @@
-function spec = memri_fft(memri, corr_N, corr_onesided, double_shift)	
-% Foward fourier of spectra ordered in space (1-ND). Expects the
-% frequency dimension/FID samples on index 1.
+function spec = memri_fft(memri, varargin)
+% Foward fourier of spectra in multi-dimensional MRS data arrays. Expects 
+% the frequency dimension/FID samples on the first index.
 %
 % Input:    memri - Array with each FID on the first dimension.
-%                    (fres x M x N x P x ...) 
-%                   or the memri-struct from memri-tb
+%                   (fres x M x N x P x ...) 
+%                   or the memri-struct from memri-ptb
 %
 % Used algorithm: fftshift( fft( FID ));
 %                 Calculate the fft of the FID and shift the zero-freq to
@@ -12,34 +12,37 @@ function spec = memri_fft(memri, corr_N, corr_onesided, double_shift)
 %                 to a cell-array with size (M x N x P ...) whereafter 
 %                 the fft-method is applied on each cell. No loops, fast.
 %
-% Optional input arguments (in order):
+% Optional input arguments:
 %
-% corr_N:         Correct for the 1/#samples (N) in the FFT. Off (0) by
-%                 default.
-% corr_onesided:  Correct for onesided FFT in spectroscopy. On (1) by
-%                 default. Sample at t = 0 is halfed before fft.
-% double_shift:   Shift the FID twice for handling (symmetric) echoes. 
-%                 Disables onesided_cor if enabled.
-%
-%
+% correct_N:        Correct for the 1/#samples (N) in the FFT. Off (0) by
+%                   default.
+% correct_onesided: Correct for onesided FFT in spectroscopy. On (1) by
+%                   default. Sample at t = 0 is halfed before fft.
+% double_shift:     Shift the FID twice for handling (symmetric) echoes. 
+%                   Disables onesided_cor if enabled.
+% Example: memri_fft(memri, 'correct_N', 1)
 % 
-% Quincy van Houtum, PhD; v2.0 11/2025
+% Quincy van Houtum, PhD; v2.2 02.2026
 % quincyvanhoutum@gmail.com
 %
 % See also: memri_ifft();
 
 
 % // --- Handle input
-if     nargin == 1,     corr_N = 0; corr_onesided = 1; double_shift = 0; 
-elseif nargin == 2,                 corr_onesided = 1; double_shift = 0;
-elseif nargin == 3,                                    double_shift = 0;
+
+% Set default options.
+opts.correct_N = 0; opts.correct_onesided = 1; opts.double_shift = 0; 
+
+% Add user input setting (varargin)
+if nargin > 1
+    for kk = 1:2:numel(varargin), opts.(varargin{kk}) = varargin{kk+1}; end   
 end
 
 % Data can be the memri-struct or a complex data array. 
 doLog = 1; if isstruct(memri), fid = memri.data; else, fid = memri; doLog = 0; end
 
 
-% // --- Convert FID to cell if array
+% // --- Convert data to cell-array
 
 if ~iscell(fid)
     wasCell = 0;
@@ -57,17 +60,17 @@ end
 
 % // --- FFT over all FIDS.
 % Check for pre-fft shift, check for onesided FFT correction, FFT, shift 
-% and n-factor correction
+% and n-factor correction.
 
 % Apply pre-shift (applicable to echoes)
-if double_shift
+if opts.double_shift
     fid = cellfun(@fftshift, fid, 'UniformOutput', 0); 
-    corr_onesided = 0;
+    opts.correct_onesided = 0;
     if doLog, memri = memri_log(memri, 'memri_fft: Applied a double-shift (for echoes).'); end
 end
 
 % Correct for t = 0 because of non-symmetrical e.g. one-sided fft. 
-if corr_onesided
+if opts.correct_onesided
     fid = cellfun(@(x) x .* [0.5 ones(1,size(x,1)-1)]', fid, 'Uniform', 0);
     if doLog, memri = memri_log(memri, 'memri_fft: corrected for one-sided FFT.'); end
 end
@@ -79,8 +82,8 @@ spec = cellfun(@fft,      fid,  'UniformOutput', 0);                        % Fa
 spec = cellfun(@fftshift, spec, 'UniformOutput', 0);                        % Shift zero-freq to centrum of spectrum
 
 % Correct N-factor 
-if corr_N                                                                   % Swap the 1/N factor convention in the inverse Fourier
-    spec = cellfun(@times, spec, repmat({1/sz(1)},size(spec)),'UniformOutput',0);              
+if opts.correct_N                                                           % Swap the 1/N factor convention in the inverse Fourier
+    spec = cellfun(@times, spec, repmat({1/sz(1)},size(spec)), 'UniformOutput',0);              
     if doLog, memri = memri_log(memri, 'memri_fft: Corrected for (1/N) in FTT.'); end
 end
 

@@ -25,6 +25,25 @@ doSiemens = 1; % <DEV>
 % opts.masksize = for noise mask size if noise from voxel, default 25%
 % Using a noise-measurement will use the full sample range.
 
+% Generate an options struct for every method
+% But we need to specify the fields
+% can do this with a text file - then automate it all
+% If module added - can add to this text file.
+memri.opts.wsvd.opts.identity_matrix = 1;
+memri.opts.roemer.opts.identity_matrix = 1;
+
+
+memri.opts.fft.correction_n = 0; % Correction for 1/N in FFT?
+memri.opts.fft.one_sided = 1;    % Correction for one-sided FFT?
+memri.opts.fft.double_shift = 0; % Double shift for symmetric echoes?
+
+% memri.opts.ifft
+% memri.opts.pca_denoising
+% memri.opts.fft_spatial
+% memri.opts.noise_analysis
+
+
+
 % ---------------------------- TBD ------------------------------------- %
 % Quantification/Fitting via AMARES (MATLAB)
 % Visualization GUI for localization: CSIgui - Lite
@@ -74,41 +93,19 @@ memri.labels
 % found, otherwise set time domain (1), or frequency domain set by user (2).
 ind_spat = findLabels(memri.labels, {'kx', 'ky', 'kz'});
 memri.nfo.domain = 0; if sum(isnan(ind_spat)) == 3, memri.nfo.domain = 1; end
-    
+
 
 % // --- Initiate LOG
 memri = memri_log(memri, memri.filepath);
 
-
 % // --- Apodization weighted acquisition correction
-if doHammingCorrection
-    memri.data = memri_hamming_correction(memri.data, ind_spat, ind_aver);    
-end
-
-
+if doHammingCorrection, memri = memri_hamming_correction(memri); end
 
 % // --- NSA
-nsa_ind = findLabels(memri.labels, {'aver'});
-if ~isnan(nsa_ind)
-    memri.data = mean(memri.data, nsa_ind, 'omitnan');
-    memri = memri_log(memri, 'memri_script: Averaged over the NSA dimension.');
-end
-
+if doAverage, memri = memri_average(memri); end
 
 % // --- FFT to spatial time domain
-if doFFT_spatial
-
-    % Required input
-    spat_ind = findLabels(memri.labels, {'kx', 'ky', 'kz'});
-
-    % Spatial forward fourier transform
-    memri.data = memri_fft_spatial(memri.data, spat_ind);
-    memri.nfo.domain = 1; % Time domain
-
-    % LOG
-    memri = memri_log(memri, 'memri_script: Applied FFT to k-space data.');
-end
-
+if doFFT_spatial, memri = memri_fft_spatial(memri); end
 
 % // --- Analyse noise-data
 if doNoise      
@@ -117,7 +114,7 @@ end
 
 % // --- Noise decorrelation
 if doNoiseDecorrecelation % Or do this within coil-combine
-    % We need this for pca denoising anyways, so maybe it makes sense to calculate it seperately.    
+    
 end
 
 

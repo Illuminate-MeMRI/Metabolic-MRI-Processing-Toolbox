@@ -103,6 +103,12 @@ else
     memri = parsePhilips(fp);
 end
 
+% // --- Data domain
+ind_spat = findLabels(memri.labels, {'kx', 'ky', 'kz'});
+% 0 = k-space, 1 = time, 2 = freq.
+memri.nfo.domain = 0; 
+if sum(isnan(ind_spat)) == 3, memri.nfo.domain = 1; end
+
 
 % // --- Save memri-struct to file
 if saveFile

@@ -17,7 +17,7 @@ function memri = memri_pca_denoising(memri, varargin)
 
 % Process input
 % Matlab' svd-econ = 0, custom faster = 1 (svd-econ)
-patch_size = 5; do_svd = 0; svdstr = 'custom';
+patch_size = 5; do_svd = 1; svdstr = 'custom';
 if nargin > 1
     indp = cellfun(@(x) strcmp(x, 'patchsize'), varargin);
     if sum(indp), patch_size = varargin{indp+1}; end
@@ -25,8 +25,7 @@ if nargin > 1
     inds = cellfun(@(x) strcmp(x, 'svd'), varargin);
     if sum(inds), do_svd = varargin{inds+1}; 
         if do_svd == 0, svdstr = 'default'; end
-    end
-    
+    end    
 end
 
 % Reshape data % ---------------------------------------------------- %

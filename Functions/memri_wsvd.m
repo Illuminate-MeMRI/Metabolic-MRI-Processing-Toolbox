@@ -27,6 +27,7 @@ if nargin > 1
     for vi = 1:2:numel(varargin), opts.(varargin{vi}) = varargin{vi+1}; end
 end
 
+
 % Given input methods are overruled by options in the memri-struct.
 if isfield(memri.nfo, 'wsvd') && isfield(memri.nfo.wsvd, 'identity_matrix')
     if memri.nfo.wsvd.identity_matrix, opts.noisecov = 0;
@@ -37,7 +38,8 @@ end
 
 
 % Create data cell-array: {fid x nchan} x ...
-[data, labels, pvec, ncell] = array2cell(memri.data,  memri.labels, {'fid', 'chan'});    
+[data, labels, pvec, ncell] = ...
+    array2cell(memri.data,  memri.labels, {'fid', 'chan'});    
 
 
 % // --- Reference channel
@@ -46,6 +48,8 @@ if opts.reference_channel == 2 % Volume
 elseif opts.reference_channel == 1 % Per Voxel
     opts.reference_channel = num2cell(cellfun(@(x) ...
         reference_channel({x}), data));
+elseif opts.reference_channel == 0 
+    opts.reference_channel = 1;
 end
 
 % // --- Combine channels via WSVD

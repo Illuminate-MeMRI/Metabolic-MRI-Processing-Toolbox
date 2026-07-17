@@ -96,7 +96,6 @@ end
 % // --- Optional DICOM
 if exist('data_img', 'var')
     memri.images.data = data_img; memri.images.nfo = nfo_img;
-    % Optional convert to CSI space already?
-    % If these scripts are made later.
+   
 end
 

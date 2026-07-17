@@ -32,16 +32,14 @@ noise_mask = [1:sz_mask_sided(1) (nS - sz_mask_sided(2) + 1):nS];
 
 % Check for time/freq domain and transform if needed
 tmp_data = memri.data;
-if memri.nfo.domain == 1
-    tmp_data = memri_fft(memri.data); 
-end
+if memri.nfo.domain == 1, tmp_data = memri_fft(memri.data); end
 if memri.nfo.domain == 0
     % Get k-space indexes
     ind_spat = findLabels(memri.labels, {'kx','ky','kz'});
     ind_spat(isnan(ind_spat)) = [];
     % FFT of k-space
-    tmp_data = memri_fft_spatial(memri.data, ind_spat);             
-    tmp_data = memri_fft(tmp_data);
+    tmp_data = fft_spatial(memri.data, ind_spat);             
+    tmp_data = fft(tmp_data);
 end
 % tmp_data is noise from the main data-set in the frequency domain.
 
