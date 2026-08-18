@@ -70,3 +70,7 @@ data = reshape(data, sz_cell);
 % Undo array to cell
 [memri.data, memri.labels] = cell2array(data, labels, pvec, ncell);
 
+
+% Optional: add ID matrix to settings!
+% memri.nfo.wsvd.opts.identity_matrix = 1;
+% memri.nfo.roemer.opts.identity_matrix = 1;

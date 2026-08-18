@@ -33,9 +33,8 @@ if isfield(memri.nfo, 'wsvd') && isfield(memri.nfo.wsvd, 'identity_matrix')
     if memri.nfo.wsvd.identity_matrix, opts.noisecov = 0;
     else, memri.nfo.wsvd.identity_matrix, opts.noisecov = 1;
     end
+    memri_log(memri, 'memri_wsvd: Using identity matrix.');
 end
-% memri_log('WSVD: Using identity matrix.');
-
 
 % Create data cell-array: {fid x nchan} x ...
 [data, labels, pvec, ncell] = ...
@@ -45,10 +44,13 @@ end
 % // --- Reference channel
 if opts.reference_channel == 2 % Volume
     opts.reference_channel = reference_channel(data);
+    memri_log(memri, 'memri_wsvd: Reference channel by volume maximum.');
 elseif opts.reference_channel == 1 % Per Voxel
     opts.reference_channel = num2cell(cellfun(@(x) ...
         reference_channel({x}), data));
+    memri_log(memri, 'memri_wsvd: Reference channel per voxel maximum.');
 elseif opts.reference_channel == 0 
+    memri_log(memri, 'memri_wsvd: First index used as reference channel.');
     opts.reference_channel = 1;
 end
 
@@ -56,6 +58,7 @@ end
 % Different calls for compatibility with all noise covariance and reference
 % channel per voxel or volume combinations.
 if numel(memri.noise.cov) > 1                                               % Noise-cov per voxel
+    memri = memri_log(memri, 'memri_wsvd: parsed noise covariance matrices per voxel.');
 
     if isscalar(opts.reference_channel)                                         % refChan for volume
         data = cellfun(@(x,y) WSVD3(x, y, opts.method, opts.reference_channel),...
@@ -66,6 +69,7 @@ if numel(memri.noise.cov) > 1                                               % No
     end
 
 else                                                                        % Noise-cov for volume
+    memri = memri_log(memri, 'memri_wsvd: parsed a single noise covariance matrix.');
 
     if isscalar(opts.reference_channel)                                        % refChan for volume 
         data = cellfun(@(x) ...
@@ -86,9 +90,5 @@ memri.nfo.wsvd.opts = opts;
 [memri.data, memri.labels] = cell2array(data, labels, pvec, ncell);
 
 % LOG
-if ~isscalar(opts.reference_channel), refChan4LOG = 'Per Voxel'; 
-else,                                 refChan4LOG = opts.reference_channel; 
-end
-memri = memri_log(memri, 'Combined coil channels using WSVD.', ...
-     'WSDV Whitening and reference-channel options: ', opts.method, refChan4LOG);
+memri = memri_log(memri, 'memri_wsvd: Combined coil channels using WSVD.');
 

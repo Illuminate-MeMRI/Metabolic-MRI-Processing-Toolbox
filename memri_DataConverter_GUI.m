@@ -255,10 +255,16 @@ tmp = obj.Parent.Name;
 obj.Parent.Name = [obj.Parent.Name '| Exporting...']; drawnow;
 
 try
+
+    % Save data if user has it enabled!
+    doSave = 1; if ~gui.ticks.savedata.Value, doSave =  0; end
+
     % Load data
     gui.texts.vendor.ForegroundColor = [156, 0, 20]./255; drawnow;
 
-    memri_loadData(files, 1);
+    % Load memri data and store to file
+    memri = memri_loadData(files, doSave);
+    setappdata(obj, 'memri', memri);
 
     % Revert to original figure name
     obj.Parent.Name = tmp; drawnow;
@@ -270,12 +276,11 @@ catch err
     % Handle errors in loading data - write file-strings and error-log to
     % file.
     obj.Parent.Name = tmp; drawnow;
-    fprintf('Loading data failed. Report error -message and -file.\n');
+    warndlg('Loading data failed. Check the error -message and -file @ MeMRI PTB root.');    
     str = char(string(datetime('now', 'Format','yyMMddHHmmss')));
     save(['error_log_' str '.mat'], 'err', 'files');
     throw(err);
 end
-
 
 % Automatic processing
 memri_launch_autoprocessing(obj);
@@ -340,10 +345,24 @@ function memri_launch_autoprocessing(obj)
 % user in the MRS data converter.
 gui = guidata(obj);
 
+% Get memri-data
+if isappdata(obj, 'memri')
+    memri = getappdata(obj, 'memri');
+else
+    return;
+end
+
 if gui.ticks.autogui.Value
-    fprintf('Automatic processing by GUI is not fully implented yet.\n')
-elseif gui.ticks.autoscript.Value
-    fprintf('Automatic processing by script is not fully implented yet.\n')
+    
+    % Check if GUI is opened - update GUI, do no relaunch
+    fobj = findall(0, 'type', 'figure', 'tag', 'memriptbgui');
+    if ~isempty(fobj)
+        memriptbgui = fobj.RunningAppInstance;
+        memriptbgui.updateInput(memri);            
+    else
+        MeMRI_Processing_GUI(memri);
+    end
+
 end
 
 end
@@ -461,12 +480,12 @@ texts.vendor.Position = pos;
 % // --- Add tickbox-objects
 
 % TICKBOX: automatic processing - Script
-ticks.autoscript = uicontrol(obj, 'Style','checkbox',...
-    'String', 'Process via script',  'Units', 'normalized',...
+ticks.savedata = uicontrol(obj, 'Style','checkbox',...
+    'String', 'Save to File',  'Units', 'normalized',...
     'BackgroundColor',clr.bg, 'ForegroundColor', clr.txt,...
-    'Fontsize', font.sz, 'FontWeight','bold'); 
-ticks.autoscript.Position = [window.grid{3,2} window.grid_sz];
-ticks.autoscript.Callback = @GUI_ticks_autoprocessing;
+    'Fontsize', font.sz, 'FontWeight','bold', 'Value', 1); 
+ticks.savedata.Position = [window.grid{3,2} window.grid_sz];
+ticks.savedata.Callback = @GUI_ticks_autoprocessing;
 
 % TICKBOX: automatic processing - GUI
 ticks.autogui = uicontrol(obj, 'Style','checkbox',...
@@ -627,22 +646,17 @@ function GUI_close(~, ~)
 closereq;
 end
 
-function GUI_ticks_autoprocessing(obj, evt)
+function GUI_ticks_autoprocessing(obj, ~)
 % Ensures only one of the tickboxes can be active - process via GUI or via
 % script.
 
 gui = guidata(obj);
 
-% Source tickbox
-src = 'gui'; if contains(evt.Source.String, 'script'), src = 'script'; end
-
-% Disable the other ticbox if enabled.
-switch src
-    case 'gui'
-        if gui.ticks.autoscript.Value, gui.ticks.autoscript.Value = 0; end        
-    case 'script'
-        if gui.ticks.autogui.Value, gui.ticks.autogui.Value = 0; end
+% Enable GUI-tickbox if save-data tickbox and GUI-tickbox are is disabled.
+if ~gui.ticks.savedata.Value && ~gui.ticks.autogui.Value
+    gui.ticks.autogui.Value = 1; 
 end
+
 
 end
 

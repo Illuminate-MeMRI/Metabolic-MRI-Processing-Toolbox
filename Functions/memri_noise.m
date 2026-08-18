@@ -10,7 +10,9 @@ function memri = memri_noise(memri, varargin)
 % Take diag of cov, remove co-var, keep var.
 % request noiseDomain = 0, kspace, 1, time, 2, frequency
 %
-% If no noise ---> take 1/8 of each tail of the spectrum.
+% If no noise ---> take 1/8 (total 25%) of each tail of the spectrum. Also
+% use the masksize for generating noise from data
+% Should ALSO be implemented if vectors are present but larger
 %
 % Requires memri.domain --> time or frequency domain noise            
 % Otherwise creates a noise-field with noise generated from the data in
@@ -25,52 +27,21 @@ function memri = memri_noise(memri, varargin)
 % If an FID noise measurement is given (no spatial dimensions: kx,ky,kz)
 
 % // --- Handle input arguments and set options
-opts = struct; opts.masksize = nan; opts.independent = 1; opts.applyFFT = 1;
+opts = struct; 
+opts.masksize = nan; opts.independent = 1; opts.noiseDomain = 1;
 if nargin > 1
     for vi = 1:2:numel(varargin), opts.(varargin{vi}) = varargin{vi+1}; end
 end
-
-% Analyse masksize: an integer, default from function or all.
-% (see memri_noise_fromData)
-if ischar(opts.masksize)
-    if strcmp(opts.masksize, 'default') % Default i.e 25% of sample size.
-        opts.masksize = nan;
-    elseif ~strcmp(opts.masksize, 'all') % Not all thus integer
-        opts.masksize = str2double(opts.masksize);    
-    end
-end
-% TBD: add the masksize to the vector used for generating noise cov data.
-% See bottom of script. Mask-size is here first used to get noise if no
-% noise data is present !!!!!
 
 % // --- Calculate noise from data if noise-data is absent
 if ~isfield(memri,'noise')  
     memri = memri_noise_fromData(memri, opts.masksize); 
     memri_log(memri,...
-        'memri_noise: Extracted noise-vectors from the main MRS data.');
+            'memri_noise: Generated noise-vectors from data in the frequency domain.');
 end
-
 
 % // --- Check noise domain
-if opts.noiseDomain ~= 0 && isfield(memri.noise, 'domain')    
-    % k-space 2 time
-    if memri.noise.domain == 0 
-        ind_spat = findByLabel(memri.noise.labels, {'kx','ky','kz'});
-        ind_spat(isnan(ind_spat)) = [];
-        memri.noise.data = memri_fft_spatial(memri.noise.data, ind_spat);
-        memri.noise.domain = 1;
-        memri = memri_log(memri,...
-            'memri_noise: Applied spatial FFT to noise-data to time-domain.');
-    end
-    % time 2 freq
-    if memri.noise.domain == 1 && opts.noiseDomain == 2
-        memri.noise.data = memri_fft(memri.noise.data); 
-        memri.noise.domain = 2;
-        memri = memri_log(memri,...
-            'memri_noise: Applied FFT to noise-data to freq-domain.');
-    end
-end
-
+memri = memri_noise_domainCheck(memri, opts);
 
 % // --- Process Averages (NSA)
 % Concatenate the averages-index with the samples index.
@@ -90,7 +61,7 @@ if ~isnan(ind_avg)
     % Permute back, only flip back 2 dims i.e. ipermute/permute equals
     noise = permute(noise, permv);
     memri = memri_log(memri,...
-        'memri_noise: Concatenated FID and NSA dimensions of the noise-data.');
+        'memri_noise: Noise sample averages concatenated.');
 end
 
 
@@ -124,4 +95,62 @@ else % FID
     if opts.independent, memri.noise.cov = diag(diag(memri.noise.cov)); end
     memri = memri_log(memri, ...
         'memri_noise: Calculated a single noise-cov.');
+end
+
+end
+
+
+function memri = memri_noise_domainCheck(memri, opts)
+% Ensures the noise data domain is matched to the requested.
+
+if opts.noiseDomain ~= memri.noise.domain    
+% Noise domain not equal to requested noise-domain
+
+    % Spatial indexes
+    ind_spat = findLabels(memri.noise.labels, {'kx','ky','kz'});
+    ind_spat(isnan(ind_spat)) = [];
+
+    % Check domain state w.r.t. k-Space
+    if opts.noiseDomain > 0 && memri.noise.domain == 0   
+        
+        % k-Space 2 time        
+        memri.noise.data = ifft_spatial(memri.noise.data, ind_spat);
+        memri.noise.domain = 1;
+        memri = memri_log(memri,...
+            'memri_noise: Applied spatial inverse FFT to noise-data (k-Space to time-domain). '); 
+
+    elseif opts.noiseDomain == 0 && memri.noise.domain > 0
+        
+        if memri.noise.domain == 2
+            % Frequency 2 time        
+            memri.noise.data = memri_ifft(memri.noise.data);
+            memri = memri_log(memri, ...
+                'memri_noise: Applied inverse FFT to noise-data (frequency to time-domain).');  
+        end
+
+        if memri.noise.domain == 1
+            % Time 2 k-Space
+            memri.noise.data = fft_spatial(memri.noise.data, ind_spat);
+            memri.noise.domain = 0;
+            memri = memri_log(memri,...
+                'memri_noise: Applied spatial FFT to noise-data (time-domain to k-Space).'); 
+        end     
+
+    end
+        
+    % Check domain state w.r.t. time and frequency
+    if opts.noiseDomain == 2 && memri.noise.domain == 1 
+        % Time 2 frequency
+        memri.noise.data = memri_fft(memri.noise.data); 
+        memri = memri_log(memri,...
+            'memri_noise: Applied FFT to noise-data (time to frequency-domain).');
+    elseif opts.noiseDomain == 1 && memri.noise.domain == 2
+        % Frequency 2 time
+        memri.noise.data = memri_ifft(memri.noise.data); 
+        memri = memri_log(memri,...
+            'memri_noise: Applied inverse FFT to noise-data (frequency to time-domain).');
+    end
+
+end
+
 end

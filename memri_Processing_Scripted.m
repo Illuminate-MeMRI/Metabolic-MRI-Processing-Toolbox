@@ -1,47 +1,64 @@
-% MeMRI_PP scripted v0.1
-clc;clear;close all force;
+% MeMRI_PP scripted v0.5
+clc; clear; close all;
 
-% MemRI Toolbox - Dynamic MATLAB framework for loading, processing, 
-% quantify and visualize MRS data
+% function memri_Processing_Scripted(memri, opts)
+% 
+% % // --- Initiate LOG
+% memri = memri_log(memri, memri.filepath);
+% % Find memri-ptb root folder
+% mroot = memri_findRoot();
+% % Parse input
+% if nargin == 1
+%   opts = config2opts(); 
+%   memri = memri_log(memri, ...
+%       'memri_scripted: Loaded default parameters for all active modules');
+% end
+
+
+% < -----------------  MemRI Processing Toolbox ------------------------ >
+% Dynamic MATLAB framework for converting, processing, quantifying and 
+% visualising MR spectroscopy data.
 %
-% Index labels of interest:     kx, ky, kz, fid, aver, chan.
+% Multidimensional spectroscopy data with dimensions described
+% by index labels of interest: [fid, kx, ky, kz, aver, chan]
+% Others dimensions will be handled as additional volumes and processed
+% equally.
+% % -------------------------------------------------------------------- %
 
-% Possible methods
-doApodization = 1;        
-doHammingCorrection = 1; 
-doHammingFilter = 0;
+
+% -------------------------- Userinput --------------------------------- %
+
+% These methods are all available in the MeMRI PTB App. Every method is an
+% MeMRI PTB module which is described in a simple text configuration file
+% (configMethods.txt). It contains the options i.e. input arguments, for
+% each module. The first entry in the input-field in this document is the
+% default input argument for a method. Calling config2opts() will generate
+% the opts-struct for use with MeMRI PTB module functions.
+
+doNoiseAnalysis = 1;
 doAverage = 1;
-doFFT_spatial = 1; 
+doHammingCorrection = 1; 
+doiFFT_kspace = 1; 
 doFFT = 1;
-doNoise = 1;
-doNoiseDecorrecelation = 1; 
-doPCA = 1;
-doCombine = 2; % 1 = WSVD, 2 = Roemer
+doPCADenoising = 0;
+doWSVD = 0; 
+doRoemer = 1;
 
-doSiemens = 1; % <DEV>
+doSave = 0;
 
-% // --- Settings (to be text-filed and read later on!)
+% Not used but available
+doHammingFilter = 0;
+doApodization = 0;        
 
-% opts.masksize = for noise mask size if noise from voxel, default 25%
-% Using a noise-measurement will use the full sample range.
+% // --- Settings 
 
-% Generate an options struct for every method
-% But we need to specify the fields
-% can do this with a text file - then automate it all
-% If module added - can add to this text file.
-memri.opts.wsvd.opts.identity_matrix = 1;
-memri.opts.roemer.opts.identity_matrix = 1;
+% Read options: can be edited here!
+mconfig = readMethods(); opts = config2opts();
 
+% // --- Misc.
 
-memri.opts.fft.correction_n = 0; % Correction for 1/N in FFT?
-memri.opts.fft.one_sided = 1;    % Correction for one-sided FFT?
-memri.opts.fft.double_shift = 0; % Double shift for symmetric echoes?
-
-% memri.opts.ifft
-% memri.opts.pca_denoising
-% memri.opts.fft_spatial
-% memri.opts.noise_analysis
-
+% <DEV>
+doSiemens = 0; 
 
 
 % ---------------------------- TBD ------------------------------------- %
@@ -52,37 +69,33 @@ memri.opts.fft.double_shift = 0; % Double shift for symmetric echoes?
 % Write help-file and quick-guide
 % Github release
 % Framework overview
-% Example data (need FIDs) and tutorial (last)
+% Example data and tutorial
+%
 % Hamming filter, Zero-filling, autophase? (memri-toolbox)
 
+mroot = memri_findRoot();
 
 % Data loaded using MeMRI-LoadData-GUI
 if ~doSiemens
     % Example data Philips
-    load('D:\OneDrive\Matlab\MeMRI\_ExampleData\CSI_Philips\raw_019.mat');
-    % load('D:\OneDrive\Matlab\MeMRI\_ExampleData\CSI_Philips\raw_020.mat');
-else
-    % Example data Siemens
-    load('D:\OneDrive\Matlab\MeMRI\_ExampleData\CSI_Siemens\PPA\meas_MID00135_FID06606_CSI4PPA_20mm.mat');    
-    % load('D:\OneDrive\Matlab\MeMRI\_ExampleData\CSI_Siemens\Pi\meas_MID00165_FID06636_CSI4Pi_20mm.mat');
-    % load('D:\OneDrive\Matlab\MeMRI\_ExampleData\CSI_Siemens\PPA_wNoise\CSI_RF2ms_155V.mat');
+    load([mroot '_ExampleData\CSI_Philips\raw_019.mat']);
+    % load([mroot '_ExampleData\CSI_Philips\raw_020.mat');   
+else    
+    % Example data Siemens   
+    fproot = [mroot '_ExampleData\CSI_Siemens\'];
+    load([fproot 'PPA\meas_MID00135_FID06606_CSI4PPA_20mm.mat']);    
+    % load([fproot Pi\meas_MID00165_FID06636_CSI4Pi_20mm.mat']);
+    % load([fproot PPA_wNoise\CSI_RF2ms_155V.mat']);
 end
 fprintf('\n\nFILE OF INTEREST:\n%s\n\n', memri.filepath);
 memri.labels
-
-
-% //--- Load in vendor-independent MeMRI data
-
-% Optional:
-% -. MR imaging data array
-% -. MR imaging spatial information
-% -. Dimension specific information (TR for multi-TR, TE for multi-TE)
-% -. T.B.D.
 
 % Data-array is sorted and labels for each index, nucleus, field strength, 
 % bandwidth, repetition time, echotime, resolution and more are available.
 % Optional: MR imaging data from dicom.
 %           load('memri_data.mat') will load memri-struct in workspace.
+
+
 
 % ----------------------- Process data
 
@@ -94,9 +107,15 @@ memri.labels
 ind_spat = findLabels(memri.labels, {'kx', 'ky', 'kz'});
 memri.nfo.domain = 0; if sum(isnan(ind_spat)) == 3, memri.nfo.domain = 1; end
 
-
 % // --- Initiate LOG
 memri = memri_log(memri, memri.filepath);
+
+% // --- Analyse noise-data
+% Noise in time domain (1), freq domain (2) or k-space (0).
+if doNoiseAnalysis
+    copts = memri_opts2list(opts.NoiseAnalysis);
+    memri = memri_noise(memri, copts{:}); 
+end
 
 % // --- Apodization weighted acquisition correction
 if doHammingCorrection, memri = memri_hamming_correction(memri); end
@@ -105,41 +124,38 @@ if doHammingCorrection, memri = memri_hamming_correction(memri); end
 if doAverage, memri = memri_average(memri); end
 
 % // --- FFT to spatial time domain
-if doFFT_spatial, memri = memri_fft_spatial(memri); end
-
-% // --- Analyse noise-data
-if doNoise      
-    memri = memri_noise(memri, 'independent', 1, 'masksize', 'all', 'noiseDomain', 2); % Noise in time domain (1)
-end
-
-% // --- Noise decorrelation
-if doNoiseDecorrecelation % Or do this within coil-combine
-    
-end
-
+if doiFFT_kspace, memri = memri_ifft_spatial(memri); end
 
 % // --- PCA denoising
-if doPCA
-    memri = memri_pca_denoising(memri);
-    memri.nfo.wsvd.opts.identity_matrix = 1;
-    memri.nfo.roemer.opts.identity_matrix = 1;
+if doPCADenoising
+    copts = memri_opts2list(opts.PCADenoising);
+    memri = memri_pca_denoising(memri, copts{:}); 
 end
 
-
-% // --- Combine coil channels
-% WSVD and ROEMER
-if doCombine == 1                                                 % WSVD %
-    % TBD: ID-matrix
-    memri = memri_wsvd(memri, 'method', 1, 'reference_channel', 1);
-elseif doCombine == 2                                           % ROEMER %
-    % TBD: ID-matrix and options
-    memri = memri_roemer(memri, 'noisecov', 1);
+% // --- Roemer
+if doRoemer
+    copts = memri_opts2list(opts.Roemer);
+    memri = memri_roemer(memri, copts{:}); 
 end
-
 
 % // --- FFT to spatial frequency domain
-if doFFT, memri = memri_fft(memri); end
+if doFFT
+    copts = memri_opts2list(opts.FFT);
+    memri = memri_fft(memri, copts{:}); 
+end
 
+% // --- WSVD
+if doWSVD
+    copts = memri_opts2list(opts.WSVD);
+    memri = memri_wsvd(memri, copts{:}); 
+end
+
+
+% // --- Save to file
+% Save memri-data
+if doSave
+    memri_save(memri, 'ScriptExport');
+end
 
 % // --- DISPLAY CHECK USING CSIgui % ---------------------------------- %
 
@@ -148,16 +164,3 @@ if doSiemens
 else
     CSIgui(memri.data, 'mrs', memri.labels, 'labels');
 end
-
-
-
-% Save memri-data
-% memri = memri_save(memri, 'overwrite'); TBD TBD TBD TBD
-% memri = memri_save(memri); TBD TBD TBD TBD
-
-
-
-% // --- Interpolate
-% // --- Phase-corrections for visualization // fitting is seperate
-% // --- Optional conversion MR imaging data
-

@@ -7,6 +7,11 @@ function memri = memri_noise_fromData(memri, masksize)
 % If the data is in k-space (nfo.domain = 0), or time-domain (nfo.domain =
 % 1), the data will be FFT-ed to the frequency domain.
 %
+% Options
+%   masksize:   size of mask in number of samples (integer), NaN or 
+%               'default' to use the default mask size or 'all' to use the 
+%               full sample range.
+%
 % Quincy van Houtum, PhD; v08.2025
 % quincyvanhoutum@gmail.com
 
@@ -22,18 +27,26 @@ szd = size(memri.data); nS = szd(1);
 
 % Masksize from input arg - NaN, use default size, char ('all') use full
 % sample range.
-if nargin == 1,  masksize = round(nS./4); end
-if isnan(masksize), masksize = round(nS./4); end
-if ischar(masksize), masksize = nS; end
+if nargin == 1, masksize = round(nS./4); end % No mask-size
+
+if ischar(masksize)
+    if strcmpi(masksize, 'all'), masksize = nS; % Use full noise-range
+    else,                        masksize = round(nS./4); % Use default
+    end    
+elseif isnan(masksize), masksize = round(nS./4); 
+elseif isscalar(masksize) % Do nothing, mask size given.
+end
 
 % Double sided noise mask indexes
 sz_mask_sided = [round(masksize./2) masksize-round(masksize./2)];
 noise_mask = [1:sz_mask_sided(1) (nS - sz_mask_sided(2) + 1):nS];
 
 % Check for time/freq domain and transform if needed
-tmp_data = memri.data;
-if memri.nfo.domain == 1, tmp_data = memri_fft(memri.data); end
-if memri.nfo.domain == 0
+tmp_data = memri.data; % Main multdimensional complext data array
+if memri.nfo.domain == 1 % fft to frequency domain
+    tmp_data = memri_fft(memri.data); 
+end
+if memri.nfo.domain == 0 % fft to spatial time domain to frequency domain
     % Get k-space indexes
     ind_spat = findLabels(memri.labels, {'kx','ky','kz'});
     ind_spat(isnan(ind_spat)) = [];
@@ -48,5 +61,11 @@ cut_ind = arrayfun(@(x) 1:x, szd, 'UniformOutput', 0);
 cut_ind{1} = noise_mask; memri.noise.data = tmp_data(cut_ind{:});
 memri.noise.domain = 2; memri.noise.labels = memri.labels;
 
+% Set domain: due lack of raw-data headers, this is done by checking for
+% the three spatial dimension labels: kx, ky and kz. If two out of three
+% are found it is assumed to be k-Space i.e. spatial frequency domain.
+ind_spat = findLabels(memri.labels, {'kx', 'ky', 'kz'});
+memri.nfo.domain = 0; if sum(isnan(ind_spat)) >= 2, memri.nfo.domain = 1; end
+
 % LOG noise creation
-% memri_log(something something);
+% memri_log(memri, 'memri_noise_fromData: generated noise-vectors.');

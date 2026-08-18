@@ -2,8 +2,9 @@ function memri = memri_loadData(fp, varargin)
 % [data, nfo] = memri_loadData(fp)
 %
 % Main function utilizing Siemens and Philips specific function to load raw
-% MRS data and convert it for use with the MeMRI processing pipeline. 
-%             --- Raw MRS data converter for MeMRI PP ---
+% MRS data and convert it for use with the MeMRI processing toolbox and its
+% processing methods.
+%             --- Raw MRS data converter for MeMRI PTB ---
 %
 % Input
 %   fp:     cell-list with filepaths to MRS data files, parameter files and
@@ -48,22 +49,21 @@ function memri = memri_loadData(fp, varargin)
 % // --- Corrections applied to the raw MRS data
 %   Siemens
 %       CSI data: 
-%           Orientation corrections for proper display        
+%           [Orientation corrections]
 %           - the kx-dimension is shifted by exactly 1 voxel by multiplying
 %             k-space by a linear phaseroll.
 %           - the ky- and kz-dimension are flipped.
 %
 %   Philips
-%       None [for now]
+%       It appears it requires a KY flip or FFT-spatial is improper.
 %
 %
 % // --- Required protocol parameters for spectroscopy data
 % Nucleus (-), field-strength (T), bandwidth (Hz), resolution (mm) OR 
 % field-of-view (mm), offcenter (mm), orientation (string: tra/sag/cor).
-% Future option: angulation?
+% T.B.D. Features: angulation.
 %
 % Uses: parseSiemens.m and parsePhilips.m
-%
 %
 % Quincy van Houtum. v01.2026
 % quincyvanhoutum@gmail.com
@@ -111,16 +111,14 @@ if sum(isnan(ind_spat)) == 3, memri.nfo.domain = 1; end
 
 
 % // --- Save memri-struct to file
-if saveFile
-    
-    % Store the memri-struct at file-location with same name as mrs-data.
-    [fp, fn, ext] = cellfun(@fileparts, memri.source.files,...
-        'UniformOutput', false);
-    
-    % Main filename
-    ind = ismember(ext, {'.dat', '.data'}); ind = find(ind,1, 'first');
-    memri.filepath = strcat(fp{ind},'\', fn{ind}, '.mat');
+% Store the memri-struct at file-location with same name as mrs-data.
+[fp, fn, ext] = cellfun(@fileparts, memri.source.files,...
+    'UniformOutput', false);
 
+% Main filename
+ind = ismember(ext, {'.dat', '.data'}); ind = find(ind,1, 'first');
+memri.filepath = strcat(fp{ind}, '\', fn{ind}, '.mat');
+if saveFile    
     try
         % Save data to file.
         save(memri.filepath, 'memri', '-v7'); % Faster
@@ -130,5 +128,4 @@ if saveFile
         % Save data to file.
         save(memri.filepath, 'memri', '-v7.3'); % Can be very slow
     end
-
 end
