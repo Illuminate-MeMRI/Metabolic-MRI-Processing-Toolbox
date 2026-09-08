@@ -1,18 +1,27 @@
 # MeMRI PTB
-The Metabolic MRI Processing Toolbox (MeMRI-PTB) allows converting, processing, quantifying (TBD) and visualizing (TBD) raw-export metabolic imaging data i.e. multi-dimensional spectroscopy data from both Siemens and Philips MR platforms in MATLAB.
+<p align="justify">
+The Metabolic MRI Processing Toolbox (MeMRI-PTB) allows converting, processing, quantifying (TBD) and visualizing (TBD) raw-export metabolic imaging data i.e. multi-dimensional spectroscopy data from both Siemens and Philips MR platforms in MATLAB. </p>
 
 # **Installation**
-MeMRI-PTB can be downloaded here from github or retrieved via the MATLAB environment. See below for the latter assuming git is installed on your PC (see https://gitforwindows.org/ ).
+<p align="justify">
+MeMRI-PTB can be downloaded here, or retrieved via the MATLAB environment allowing seamless updating via pull-requests. See below for the latter assuming git is installed on your PC (see https://gitforwindows.org/ ). </p>
 
 ## **Github in MATLAB**
-Create an empty folder for MeMRI-PTB named Metabolic-MRI-Processing-Toolbox in MATLAB using the “Current Folder” pane via right-click > New > Folder. For a custom root directory name, see the paragraph below. Open the directory Metabolic-MRI-Processing-Toolbox, right-click inside the “Current Folder” pane and select “Source Control”. The window below will appear:
+<p align="justify">
+Create an empty folder for MeMRI-PTB named Metabolic-MRI-Processing-Toolbox in MATLAB using the “Current Folder” pane via right-click > New > Folder. For a custom root directory name, see the paragraph below. Open the directory Metabolic-MRI-Processing-Toolbox, right-click inside the “Current Folder” pane and select “Source Control”. The window below will appear: </p>
 
 <img width="936" height="466" alt="image" src="https://github.com/user-attachments/assets/05df92b2-88d5-42fa-8147-6a7e8bc0fcc0" />
 
-Select Git as “Source Control Integration” and enter the github path “https://github.com/Illuminate-MeMRI/Metabolic-MRI-Processing-Toolbox” in the “Repository path” editfield. Click “retrieve” at the bottom right and wait until MATLAB has downloaded the required files. 
+<p align="justify">
+Select Git as “Source Control Integration” and enter the github path “https://github.com/Illuminate-MeMRI/Metabolic-MRI-Processing-Toolbox” in the “Repository path” editfield. Click “retrieve” at the bottom right and continue after MATLAB has downloaded all files. </p>
+
+> [!IMPORTANT]
+After all files have been downloaded, **run the memri_install() script** from the root-directory of the MeMRI-PTB to add the required folders to MATLAB's search path.
+
+<p align="justify"> This ensures all directories and files can be found by the applications and scripts. Do update memri_findRoot() if a different root-directory name is used, see below. </p>
 
 ## **Custom root directory**
-A custom directory name for the github repository is possible but requires a change to the function memri_findRoot(). The defined root-directory is stored as variable “stroi” and must be changed to the desired directory name.
+A custom directory name for the GitHub repository requires an update to the function memri_findRoot() in ... > functions > framework. The root-directory name is stored as variable “stroi”, the first code-line in the file, and must be changed to the root directory name of MEMRI-PTB.
 
 ## **Example data**
 The MRS example data is too large for default use with github and therefore stored at a different location: 
