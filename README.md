@@ -18,7 +18,7 @@ A custom directory name for the github repository is possible but requires a cha
 The MRS example data is too large for default use with github and therefore stored at a different location: 
 
 # **Background**
-<p align="justified">
+<p align="justify">
 Large x-nuclei spectroscopy data sets from high-field MR systems are becoming more prevalent in the recent decades due to technological advances in both hardware and computing power. Increases in RF coil density i.e. phased arrays, allow acquisition over large field of views (FOV) paving the way for upper and lower body MRS applications.
 However, MR systems cannot handle these data sets using the conventional reconstruction pipelines and are often poorly documented. New processing methods have been introduced to increase sensitivity through new coil-combination and denoising methods. Therefor raw spectroscopy data is often exported for offline reconstruction. 
 Multi-centre studies with different MR-system vendors are a crucial part of translating academic research into clinical practice. Unfortunately, there is no consensus on processing methods nor their implementation. Therefore, we collaborated between 4 sites in 3 European countries to streamline data handling and visualization methodology. This resulted in this metabolic MR imaging processing toolbox available for the entire MR spectroscopy community.
