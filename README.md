@@ -1,11 +1,11 @@
 # MeMRI PTB
 <p align="justify">
-The Metabolic MRI Processing Toolbox (MeMRI-PTB) allows converting, processing, quantifying (TBD) and visualizing (TBD) raw-export metabolic imaging data i.e. multi-dimensional spectroscopy data from both Siemens and Philips MR platforms in MATLAB. The MeMRI processing toolbox application is MR-system independent and includes custom code support for data conversion.
+The Metabolic MRI Processing Toolbox (MeMRI-PTB) allows converting, processing, quantifying (TBD) and visualizing (TBD) raw-export metabolic imaging data i.e. multi-dimensional spectroscopy data from both Siemens and Philips MR platforms in MATLAB. Additionally, the processing application and scripts are MR-system independent and the full MeMRI-PTB package includes custom code support for data conversions and processing methods.
 </p>
 
 # **Installation**
 <p align="justify">
-MeMRI-PTB can be downloaded here, or retrieved via the MATLAB environment allowing seamless updating via pull-requests. See below for the latter assuming git is installed on your PC (see https://gitforwindows.org/ ). </p>
+MeMRI-PTB can be downloaded here, or retrieved via the MATLAB environment allowing seamless updating via pull-requests. See below for the latter assuming git is installed on your PC (see https://gitforwindows.org/ ). In both cases, do run memri_install() before first use. </p>
 
 ## **Github in MATLAB**
 <p align="justify">
@@ -25,7 +25,19 @@ After all files have been downloaded, **run the memri_install() script** from th
 A custom directory name for the GitHub repository requires an update to the function memri_findRoot() in ... > functions > framework. The root-directory name is stored as variable “stroi”, the first code-line in the file, and must be changed to the root directory name of MEMRI-PTB.
 
 ## **Example data**
-The MRS example data is too large for default use with github and therefore stored at a different location: 
+The MRS example data is too large for default use with github and therefore stored at a different (onedrive-cloud) location.
+
+[Philips data](https://1drv.ms/u/c/5f8322958f5befbc/IQCn-ZvLp0yRRLIvRbqVTIp5ARbksLR0-qfTeTrS_jfFPR8?e=l88Ppz)  [384MB] ---- SHA256: 296359abc7478f3b43e1ec928850e3672f61b8b5c402885088c0f0ae86654242
+
+[Siemens data](https://1drv.ms/u/c/5f8322958f5befbc/IQCaO6PB-vIjTaQR_RnXiYOKAUDYf_VcKTHEz_y_kiUxZOI?e=do6mDd)  [307MB] ---- SHA256: 88eac8a950a874b6a12d114cbc23663ce837c0c14d67f3068b881c5ef5dcfaa1
+
+# Framework
+<p align="justify">
+The MeMRI-PTB framework is split into three hierarchical layers. The first layer comprises the core methodology, which is complemented by a second data management layer responsible for coordinating and overseeing its functionality. The final layer consists of application-level components for graphical interfacing, which provide access to and interaction with the underlying framework. Every processing method is a module in the MeMRI-PTB framework and allows custom processing methods (i.e. modules) to be added to the application or scripted processing pipelines easily with the provided guides.
+
+# Dependencies
+Solely the MeMRI-PTB data conversion application and scripts are MR-system dependent and read and convert Siemens and Philips data: dat-files and list/data-files, to a generalized MATLAB structure-format. Custom-code is supported and in combination with provided guides allows user to implement read and conversion scripts for unsupported MR-system data. 
+</p>
 
 # **Background**
 <p align="justify">
