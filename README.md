@@ -1,4 +1,5 @@
 # MeMRI PTB
+The Metabolic MRI Processing Toolbox (MeMRI-PTB) allows converting, processing, quantifying (TBD) and visualizing (TBD) raw-export metabolic imaging data i.e. multi-dimensional spectroscopy data from both Siemens and Philips MR platforms in MATLAB.
 
 # **Installation**
 MeMRI-PTB can be downloaded here from github or retrieved via the MATLAB environment. See below for the latter assuming git is installed on your PC (see https://gitforwindows.org/ ).
