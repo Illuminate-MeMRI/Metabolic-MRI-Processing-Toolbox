@@ -1,8 +1,7 @@
 # MeMRI PTB
 
-#**Installation**
-MeMRI-PTB can be downloaded from github or retrieved via the MATLAB environment. See below for the latter assuming git is installed on your PC (see https://gitforwindows.org/ ).
-Download:	https://github.com/Illuminate-MeMRI/Metabolic-MRI-Processing-Toolbox
+# **Installation**
+MeMRI-PTB can be downloaded here from github or retrieved via the MATLAB environment. See below for the latter assuming git is installed on your PC (see https://gitforwindows.org/ ).
 
 ## **Github in MATLAB**
 Create an empty folder for MeMRI-PTB named Metabolic-MRI-Processing-Toolbox in MATLAB using the “Current Folder” pane via right-click > New > Folder. For a custom root directory name, see the paragraph below. Open the directory Metabolic-MRI-Processing-Toolbox, right-click inside the “Current Folder” pane and select “Source Control”. The window below will appear:
