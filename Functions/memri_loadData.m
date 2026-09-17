@@ -120,6 +120,9 @@ ind = ismember(ext, {'.dat', '.data'}); ind = find(ind,1, 'first');
 memri.filepath = strcat(fp{ind}, '\', fn{ind}, '.mat');
 if saveFile    
     try
+        % Set error instead of warning if file too large for v7.
+        warning('error', 'MATLAB:save:sizeTooLargeForMATFile');
+
         % Save data to file.
         save(memri.filepath, 'memri', '-v7'); % Faster
     catch err

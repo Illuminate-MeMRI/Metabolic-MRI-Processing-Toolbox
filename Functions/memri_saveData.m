@@ -87,15 +87,21 @@ memri = memri_log(memri, logtxt, fpn);
 
 % // --- Save to file
 try
+
+    % Set error instead of warning if file too large for v7.
+    warning('error', 'MATLAB:save:sizeTooLargeForMATFile');
+
     % Save data to file.
-    save(fpn, 'memri', '-v7'); % Faster but can result in larger filesizes.
+    save(fpn, 'memri', '-v7'); % Faster, but can result in larger filesizes.
 
 catch err
     fprintf('%s\n', err.message);
-    fprintf('Saving mat-file using v7.3. Can be time-consuming.');
+    fprintf('Saving mat-file using v7.3. Can be time-consuming.\n');
     
     % Save data to file.
-    save(fpn, 'memri', '-v7.3'); % Can be very slow
+    save(fpn, 'memri', '-v7.3'); % Can be very slow (or use -nocompression)
 end
 
 end
+
+
