@@ -229,9 +229,9 @@ if doAskUser
     mrs_nfo = struct; 
 
     % Set nucleus, fieldstrength, bandwidth and echotime.
-    mrs_nfo.nucleus = uans{3}; 
-    mrs_nfo.tesla = str2double(uans{2}); 
-    mrs_nfo.bw = str2double(uans{4});
+    mrs_nfo.Nucleus = uans{3}; 
+    mrs_nfo.fieldstrength = str2double(uans{2}); 
+    mrs_nfo.SpectralBW_Hz = str2double(uans{4});
     mrs_nfo.TE = str2double(uans{5});
     
     % Set resolution

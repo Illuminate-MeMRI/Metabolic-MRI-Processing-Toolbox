@@ -5,25 +5,32 @@ function mrs_nfo = parseTextProtocol(nfo)
 % text files.
 %
 % Struct field order for output:
-% nucleus, fieldstrength, bw, dwelltime, transmit frequency, TE, OS?
+% nucleus, fieldstrength, bw, dwelltime, transmit frequency, TE, OS
 % dimensions, res, fov, orientation, offcenter.
 %
 % Minimalistic input to the memri toolbox proccessing pipeline is by
 % design, decreasing dependencies with additions or changes to file 
 % structures. File header data is stored in the memri load data mat-file. 
 %
+% Includes check for returned fields in nfo, if expected fields from the
+% txt-protocol are not found, i.e. for use with user-input.
+% 
 % Quincy van Houtum, v11.2025
 % quincyvanhoutum@gmail.com
 
 
 % Nucleus
 % Flip Philips convention: element symbol before mass number
-nuc = regexp(nfo.Nucleus,'[A-Z]','Match'); num = regexp(nfo.Nucleus,'\d*','Match');
+nuc = regexp(nfo.Nucleus,'[A-Z]','Match'); 
+num = regexp(nfo.Nucleus,'\d*','Match');
 mrs_nfo.nucleus = strcat(num{:},nuc{:});
 
-
 % Fieldstrength
-mrs_nfo.fieldstrength = 7; % This is nowhere present in exported data.
+if ~isfield(nfo, 'fieldstrength')
+    mrs_nfo.fieldstrength = 7; % This is nowhere present in exported data.
+else 
+    mrs_nfo.fieldstrength = nfo.fieldstrength; % User input possible.
+end
 
 % Bandwidth
 if isfield(nfo, 'SpectralBW_Hz')
@@ -35,6 +42,8 @@ if isfield(nfo,  'Act_TR_TE_ms')
     TRTE = strsplit(nfo.Act_TR_TE_ms,' / ');
     mrs_nfo.TR = str2double(TRTE{1}) .* 1e-3;
     mrs_nfo.TE = str2double(TRTE{2}) .* 1e-3;
+elseif isfield(nfo, 'TE')
+    mrs_nfo.TE = nfo.TE;
 end
 
 % FOV: RL AP FH
@@ -45,12 +54,20 @@ end
 % Resolution: RL AP FH
 if isfield(nfo, 'ACQVoxelSizeRL_mm')
     mrs_nfo.res = [nfo.ACQVoxelSizeRL_mm nfo.ACQAP_mm nfo.ACQFH_mm];
+elseif isfield(nfo, 'res')
+    mrs_nfo.res = nfo.res;
 end
 
 % Orientation
-mrs_nfo.orientation = nfo.SliceOrientation(1:3);
+if isfield(nfo, 'SliceOrientation')
+    mrs_nfo.orientation = nfo.SliceOrientation(1:3);
+elseif isfield(nfo,'orientation')
+    mrs_nfo.orientation = nfo.orientation;
+end
 
 % Offcenter
 if isfield(nfo, 'Offc_AP_P__mm')
    mrs_nfo.offcenter = [nfo.Offc_AP_P__mm nfo.OffRL_L__mm nfo.OffFH_H__mm];
+elseif isfield(nfo, 'offset')
+   mrs_nfo.offcenter = nfo.offset;
 end
